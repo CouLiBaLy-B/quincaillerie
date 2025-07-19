@@ -3,70 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Quincaillerie</title>
+    <title>POS Quincaillerie - Système Complet</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container-fluid">
-        <h1 class="text-center my-4">Système de Point de Vente - Quincaillerie</h1>
-        <div class="text-center mb-3">
-            <a href="/inventory" class="btn btn-secondary">Gestion des Stocks</a>
-            <a href="/dashboard" class="btn btn-info">Tableau de Bord</a>
-            <a href="/sales-history" class="btn btn-warning">Historique des Ventes</a>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-tools"></i> Quincaillerie Moderne
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home"></i> Accueil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inventory">
+                            <i class="fas fa-boxes"></i> Inventaire
+                            {% if low_stock_count > 0 %}
+                                <span class="badge badge-warning">{{ low_stock_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-chart-bar"></i> Tableau de Bord
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers">
+                            <i class="fas fa-users"></i> Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/suppliers">
+                            <i class="fas fa-truck"></i> Fournisseurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/promotions">
+                            <i class="fas fa-tags"></i> Promotions
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
+    </nav>
 
-        <div class="row">
-            <div class="col-md-7">
-                <h2>Interface de Vente</h2>
-                <div class="form-group">
-                    <label for="product-search">Rechercher un produit</label>
-                    <input type="text" class="form-control" id="product-search" placeholder="Nom du produit ou catégorie...">
-                    <div id="search-results"></div>
-                </div>
-                <div id="selected-product" class="card" style="display: none;">
-                    <div class="card-body">
-                        <h5 class="card-title" id="selected-product-name"></h5>
-                        <p>Catégorie: <span id="selected-product-category"></span></p>
-                        <p>Stock disponible: <span id="selected-product-stock"></span></p>
-                        <p>Prix minimum suggéré: <span id="selected-product-min-price"></span> €</p>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="quantity">Quantité</label>
-                                <input type="number" class="form-control" id="quantity" value="1" min="1">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="negotiated-price">Prix de vente (€)</label>
-                                <input type="number" class="form-control" id="negotiated-price" step="0.01">
+    <!-- Alert for low stock -->
+    {% if low_stock_count > 0 %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Attention!</strong> {{ low_stock_count }} produit(s) en rupture de stock.
+        <a href="/inventory?low_stock=true" class="alert-link">Voir les produits</a>
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="jumbotron bg-gradient-primary text-white">
+                    <h1 class="display-4">
+                        <i class="fas fa-cash-register"></i>
+                        Système de Point de Vente - Quincaillerie
+                    </h1>
+                    <p class="lead">Gestion complète de votre magasin de quincaillerie</p>
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <i class="fas fa-boxes fa-2x"></i>
+                                <h5 id="total-products">-</h5>
+                                <p>Produits</p>
                             </div>
                         </div>
-                        <button id="add-to-cart" class="btn btn-primary">Ajouter au panier</button>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <i class="fas fa-users fa-2x"></i>
+                                <h5 id="total-customers">-</h5>
+                                <p>Clients</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <i class="fas fa-euro-sign fa-2x"></i>
+                                <h5 id="daily-revenue">-</h5>
+                                <p>Ventes du jour</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <i class="fas fa-shopping-cart fa-2x"></i>
+                                <h5 id="daily-sales">-</h5>
+                                <p>Transactions</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-bolt"></i> Actions Rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <a href="/inventory" class="btn btn-outline-secondary btn-block">
+                                    <i class="fas fa-boxes"></i><br>
+                                    Gestion des Stocks
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="/dashboard" class="btn btn-outline-info btn-block">
+                                    <i class="fas fa-chart-bar"></i><br>
+                                    Tableau de Bord
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="/sales-history" class="btn btn-outline-warning btn-block">
+                                    <i class="fas fa-history"></i><br>
+                                    Historique
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="/customers" class="btn btn-outline-success btn-block">
+                                    <i class="fas fa-users"></i><br>
+                                    Clients
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="/reports" class="btn btn-outline-primary btn-block">
+                                    <i class="fas fa-chart-pie"></i><br>
+                                    Rapports
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="/promotions" class="btn btn-outline-danger btn-block">
+                                    <i class="fas fa-tags"></i><br>
+                                    Promotions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main POS Interface -->
+        <div class="row">
+            <!-- Left Column - Product Search and Selection -->
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-search"></i> Interface de Vente</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Universal Search -->
+                        <div class="form-group">
+                            <label for="product-search">Rechercher un produit</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="product-search" 
+                                       placeholder="Nom du produit, catégorie ou code-barres...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="barcode-scan">
+                                        <i class="fas fa-barcode"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="search-results"></div>
+                        </div>
+
+                        <!-- Customer Selection -->
+                        <div class="form-group">
+                            <label for="customer-search">Client (optionnel)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="customer-search" 
+                                       placeholder="Rechercher un client...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" type="button" data-toggle="modal" data-target="#addCustomerModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="customer-results"></div>
+                            <div id="selected-customer" style="display: none;" class="mt-2">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-user"></i>
+                                    Client sélectionné: <strong id="selected-customer-name"></strong>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary float-right" id="clear-customer">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Product Details -->
+                        <div id="selected-product" class="card" style="display: none;">
+                            <div class="card-body">
+                                <h5 class="card-title" id="selected-product-name"></h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Catégorie:</strong> <span id="selected-product-category"></span></p>
+                                        <p><strong>Stock disponible:</strong> <span id="selected-product-stock" class="badge badge-info"></span></p>
+                                        <p><strong>Prix minimum:</strong> <span id="selected-product-min-price"></span> €</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="promotion-info" style="display: none;" class="alert alert-success">
+                                            <i class="fas fa-tag"></i>
+                                            <strong>Promotion disponible!</strong>
+                                            <div id="promotion-details"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label for="quantity">Quantité</label>
+                                        <input type="number" class="form-control" id="quantity" value="1" min="1">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="negotiated-price">Prix de vente (€)</label>
+                                        <input type="number" class="form-control" id="negotiated-price" step="0.01">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="discount-percent">Remise (%)</label>
+                                        <input type="number" class="form-control" id="discount-percent" value="0" min="0" max="100" step="0.1">
+                                    </div>
+                                </div>
+                                <button id="add-to-cart" class="btn btn-primary btn-block">
+                                    <i class="fas fa-cart-plus"></i> Ajouter au panier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Shopping Cart -->
             <div class="col-md-5">
-                <h2>Panier</h2>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Produit</th>
-                            <th>Qté</th>
-                            <th>Prix U.</th>
-                            <th>Total</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-items">
-                    </tbody>
-                </table>
-                <h4>Total: <span id="cart-total">0.00</span> €</h4>
-                <button id="finalize-sale" class="btn btn-success btn-block">Valider la vente</button>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-shopping-cart"></i> Panier</h5>
+                        <button id="clear-cart" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Vider
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Produit</th>
+                                        <th>Qté</th>
+                                        <th>Prix U.</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cart-items">
+                                    <tr id="empty-cart-message">
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="fas fa-shopping-cart fa-2x"></i><br>
+                                            Panier vide
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Cart Summary -->
+                        <div class="cart-summary">
+                            <div class="row">
+                                <div class="col-6"><strong>Sous-total:</strong></div>
+                                <div class="col-6 text-right"><span id="cart-subtotal">0.00</span> €</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">Remise:</div>
+                                <div class="col-6 text-right text-success">-<span id="cart-discount">0.00</span> €</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">TVA (20%):</div>
+                                <div class="col-6 text-right"><span id="cart-tax">0.00</span> €</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6"><h5>Total:</h5></div>
+                                <div class="col-6 text-right"><h5><span id="cart-total">0.00</span> €</h5></div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group mt-3">
+                            <label for="payment-method">Mode de paiement</label>
+                            <select class="form-control" id="payment-method">
+                                <option value="Cash">Espèces</option>
+                                <option value="Card">Carte bancaire</option>
+                                <option value="Check">Chèque</option>
+                                <option value="Transfer">Virement</option>
+                            </select>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group">
+                            <label for="sale-notes">Notes (optionnel)</label>
+                            <textarea class="form-control" id="sale-notes" rows="2" placeholder="Notes sur la vente..."></textarea>
+                        </div>
+
+                        <!-- Finalize Sale Button -->
+                        <button id="finalize-sale" class="btn btn-success btn-block btn-lg" disabled>
+                            <i class="fas fa-check"></i> Valider la vente
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <hr>
     </div>
 
+    <!-- Add Customer Modal -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un nouveau client</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-customer-form">
+                        <div class="form-group">
+                            <label for="customer-name">Nom *</label>
+                            <input type="text" class="form-control" id="customer-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-email">Email</label>
+                            <input type="email" class="form-control" id="customer-email">
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-phone">Téléphone</label>
+                            <input type="tel" class="form-control" id="customer-phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-address">Adresse</label>
+                            <textarea class="form-control" id="customer-address" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="save-customer">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle"></i> Vente réussie!
+                    </h5>
+                </div>
+                <div class="modal-body text-center">
+                    <p>La vente a été enregistrée avec succès!</p>
+                    <div id="sale-summary"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="print-receipt">
+                        <i class="fas fa-print"></i> Imprimer le reçu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
