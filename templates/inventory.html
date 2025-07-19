@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Stocks</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Gestion des Stocks</h1>
+        <a href="/" class="btn btn-primary mb-3">Retour à la vente</a>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="card mb-4">
+            <div class="card-header">Importer depuis Excel</div>
+            <div class="card-body">
+                <form action="/inventory/import" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <input type="file" name="file" class="form-control-file">
+                    </div>
+                    <button type="submit" class="btn btn-info">Importer</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Ajouter un produit</div>
+            <div class="card-body">
+                <form action="/product/add" method="post">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <input type="text" name="name" class="form-control" placeholder="Nom du produit" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <input type="text" name="category" class="form-control" placeholder="Catégorie" required>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <input type="number" name="stock_quantity" class="form-control" placeholder="Quantité" required>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <input type="number" name="min_price" step="0.01" class="form-control" placeholder="Prix min." required>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <button type="submit" class="btn btn-success btn-block">Ajouter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h2>Liste des produits</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Catégorie</th>
+                    <th>Quantité en Stock</th>
+                    <th>Prix Minimum</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr class="{{ 'table-danger' if product.stock_quantity < 10 }}">
+                    <form action="/product/edit/{{ product.id }}" method="post">
+                        <td><input type="text" name="name" class="form-control" value="{{ product.name }}"></td>
+                        <td><input type="text" name="category" class="form-control" value="{{ product.category }}"></td>
+                        <td><input type="number" name="stock_quantity" class="form-control" value="{{ product.stock_quantity }}"></td>
+                        <td><input type="number" name="min_price" step="0.01" class="form-control" value="{{ product.min_price }}"></td>
+                        <td><button type="submit" class="btn btn-warning">Modifier</button></td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

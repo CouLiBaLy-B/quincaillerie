@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Quincaillerie</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Système de Point de Vente - Quincaillerie</h1>
+        <div class="text-center mb-3">
+            <a href="/inventory" class="btn btn-secondary">Gestion des Stocks</a>
+            <a href="/dashboard" class="btn btn-info">Tableau de Bord</a>
+            <a href="/sales-history" class="btn btn-warning">Historique des Ventes</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-7">
+                <h2>Interface de Vente</h2>
+                <div class="form-group">
+                    <label for="product-search">Rechercher un produit</label>
+                    <input type="text" class="form-control" id="product-search" placeholder="Nom du produit ou catégorie...">
+                    <div id="search-results"></div>
+                </div>
+                <div id="selected-product" class="card" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title" id="selected-product-name"></h5>
+                        <p>Catégorie: <span id="selected-product-category"></span></p>
+                        <p>Stock disponible: <span id="selected-product-stock"></span></p>
+                        <p>Prix minimum suggéré: <span id="selected-product-min-price"></span> €</p>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="quantity">Quantité</label>
+                                <input type="number" class="form-control" id="quantity" value="1" min="1">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="negotiated-price">Prix de vente (€)</label>
+                                <input type="number" class="form-control" id="negotiated-price" step="0.01">
+                            </div>
+                        </div>
+                        <button id="add-to-cart" class="btn btn-primary">Ajouter au panier</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <h2>Panier</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Qté</th>
+                            <th>Prix U.</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items">
+                    </tbody>
+                </table>
+                <h4>Total: <span id="cart-total">0.00</span> €</h4>
+                <button id="finalize-sale" class="btn btn-success btn-block">Valider la vente</button>
+            </div>
+        </div>
+        <hr>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

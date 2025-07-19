@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique des Ventes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Historique des Ventes</h1>
+        <a href="/" class="btn btn-primary mb-3">Retour à la vente</a>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Numéro de Vente</th>
+                    <th>Date</th>
+                    <th>Montant Total</th>
+                    <th>Détails</th>
+                    <th>Reçu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td>{{ sale.id }}</td>
+                    <td>{{ sale.sale_date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td>{{ "%.2f"|format(sale.total_amount) }} €</td>
+                    <td>
+                        <ul>
+                        {% for item in sale.items %}
+                            <li>{{ item.product.name }} (x{{ item.quantity_sold }} @ {{ "%.2f"|format(item.unit_price) }} €)</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td><a href="/receipt/{{ sale.id }}" class="btn btn-info btn-sm" target="_blank">PDF</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Tableau de Bord</h1>
+        <a href="/" class="btn btn-primary mb-3">Retour à la vente</a>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">Chiffre d'affaires quotidien</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ "%.2f"|format(daily_revenue) }} €</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">Chiffre d'affaires hebdomadaire</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ "%.2f"|format(weekly_revenue) }} €</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Chiffre d'affaires mensuel</div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ "%.2f"|format(monthly_revenue) }} €</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Top 10 des produits les plus vendus</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Quantité vendue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in top_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.total_sold }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h2>Répartition des ventes par catégorie</h2>
+                <canvas id="salesByCategoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var ctx = document.getElementById('salesByCategoryChart').getContext('2d');
+        var salesByCategoryChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [{% for item in sales_by_category %}"{{ item.category }}",{% endfor %}],
+                datasets: [{
+                    label: 'Ventes par catégorie',
+                    data: [{% for item in sales_by_category %}{{ item.category_revenue }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'
+                    ]
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
