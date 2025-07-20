@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur serveur - Quincaillerie Moderne{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>500 - Erreur interne du serveur</h2>
+                <div class="error-details">
+                    <i class="fas fa-exclamation-triangle fa-5x text-danger mb-4"></i>
+                    <p>Une erreur inattendue s'est produite. Nos équipes ont été notifiées.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Page précédente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

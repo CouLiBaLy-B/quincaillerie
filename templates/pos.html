@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Point de Vente - Quincaillerie Moderne{% endblock %}
+
+{% block extra_css %}
+<style>
+.pos-container {
+    height: calc(100vh - 120px);
+}
+.product-grid {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.product-card {
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+.product-card:hover {
+    border-color: #007bff;
+    transform: translateY(-2px);
+}
+.cart-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.cart-total {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid pos-container">
+    <div class="row mt-3">
+        <div class="col-12">
+            <h2><i class="fas fa-cash-register"></i> Point de Vente</h2>
+        </div>
+    </div>
+
+    <div class="row h-100">
+        <!-- Left Panel - Products -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" id="pos-search" class="form-control" 
+                                       placeholder="Rechercher un produit...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="category-filter" class="form-control">
+                                <option value="">Toutes catégories</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="products-grid" class="row product-grid">
+                        <!-- Products will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Cart -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <h5><i class="fas fa-shopping-cart"></i> Panier</h5>
+                    <button id="clear-pos-cart" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Selection -->
+                    <div class="form-group">
+                        <label>Client</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pos-customer-search" class="form-control" 
+                                   placeholder="Rechercher client...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" 
+                                        data-toggle="modal" data-target="#quickCustomerModal">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="pos-selected-customer" style="display: none;" class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-user"></i> <span id="pos-customer-name"></span>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 ml-2" 
+                                        id="pos-clear-customer">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div class="cart-container">
+                        <div id="pos-cart-items">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-shopping-cart fa-2x"></i><br>
+                                <small>Panier vide</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Total -->
+                    <div class="cart-total">
+                        <div class="row">
+                            <div class="col-6">Sous-total:</div>
+                            <div class="col-6 text-right"><span id="pos-subtotal">0.00</span> €</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">Remise:</div>
+                            <div class="col-6 text-right text-success">-<span id="pos-discount">0.00</span> €</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">TVA (20%):</div>
+                            <div class="col-6 text-right"><span id="pos-tax">0.00</span> €</div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6"><strong>Total:</strong></div>
+                            <div class="col-6 text-right"><strong><span id="pos-total">0.00</span> €</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Payment -->
+                    <div class="mt-3">
+                        <div class="form-group">
+                            <label>Mode de paiement</label>
+                            <select id="pos-payment-method" class="form-control form-control-sm">
+                                <option value="Cash">Espèces</option>
+                                <option value="Card">Carte bancaire</option>
+                                <option value="Check">Chèque</option>
+                                <option value="Transfer">Virement</option>
+                            </select>
+                        </div>
+                        <button id="pos-checkout" class="btn btn-success btn-block" disabled>
+                            <i class="fas fa-check"></i> Valider la vente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Customer Modal -->
+<div class="modal fade" id="quickCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter un client</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quick-customer-form">
+                    <div class="form-group">
+                        <label>Nom *</label>
+                        <input type="text" id="quick-customer-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="quick-customer-phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="quick-customer-email" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="save-quick-customer">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal fade" id="productDetailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="product-detail-name"></h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Catégorie:</strong> <span id="product-detail-category"></span></p>
+                        <p><strong>Stock:</strong> <span id="product-detail-stock"></span></p>
+                        <p><strong>Prix minimum:</strong> <span id="product-detail-price"></span> €</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="product-promotion-info" style="display: none;" class="alert alert-success">
+                            <strong>Promotion active!</strong>
+                            <div id="product-promotion-details"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Quantité</label>
+                        <input type="number" id="product-quantity" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Prix unitaire (€)</label>
+                        <input type="number" id="product-unit-price" class="form-control" step="0.01">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Remise (%)</label>
+                        <input type="number" id="product-discount" class="form-control" value="0" min="0" max="100" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="add-product-to-cart">Ajouter au panier</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+{% endblock %}

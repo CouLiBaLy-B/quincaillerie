@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Promotions - Quincaillerie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-tags"></i> Gestion des Promotions</h1>
+        <div>
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#addPromotionModal">
+                <i class="fas fa-plus"></i> Nouvelle Promotion
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Statistiques des promotions -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>{{ promotions|length }}</h5>
+                            <p class="mb-0">Promotions actives</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tags fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>
+                                {% set active_count = 0 %}
+                                {% for promotion in promotions %}
+                                    {% if (promotion.start_date|make_aware) <= current_date <= (promotion.end_date|make_aware) %}
+                                        {% set active_count = active_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ active_count }}
+                            </h5>
+                            <p class="mb-0">En cours</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-play fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>
+                                {% set upcoming_count = 0 %}
+                                {% for promotion in promotions %}
+                                    {% if (promotion.start_date|make_aware) > current_date %}
+                                        {% set upcoming_count = upcoming_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ upcoming_count }}
+                            </h5>
+                            <p class="mb-0">À venir</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>
+                                {% set expired_count = 0 %}
+                                {% for promotion in promotions %}
+                                    {% if (promotion.end_date|make_aware) < current_date %}
+                                        {% set expired_count = expired_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ expired_count }}
+                            </h5>
+                            <p class="mb-0">Expirées</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des promotions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Liste des Promotions</h5>
+        </div>
+        <div class="card-body">
+            {% if promotions %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Nom</th>
+                                <th>Description</th>
+                                <th>Remise</th>
+                                <th>Période</th>
+                                <th>Catégories</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for promotion in promotions %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ promotion.name }}</strong>
+                                        {% if promotion.min_quantity > 1 %}
+                                            <br><small class="text-muted">Min. {{ promotion.min_quantity }} articles</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ promotion.description[:50] }}
+                                        {% if promotion.description|length > 50 %}...{% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success badge-lg">
+                                            {{ promotion.discount_percent }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <strong>Du:</strong> {{ promotion.start_date.strftime('%d/%m/%Y') }}<br>
+                                            <strong>Au:</strong> {{ promotion.end_date.strftime('%d/%m/%Y') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% set categories = promotion.applicable_categories|from_json %}
+                                        {% if categories %}
+                                            {% for category in categories[:2] %}
+                                                <span class="badge badge-info">{{ category }}</span>
+                                            {% endfor %}
+                                            {% if categories|length > 2 %}
+                                                <span class="badge badge-secondary">+{{ categories|length - 2 }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Toutes</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if (promotion.start_date|make_aware) <= current_date <= (promotion.end_date|make_aware) %}
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-play"></i> Active
+                                            </span>
+                                        {% elif promotion.start_date > current_date %}
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock"></i> À venir
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-times"></i> Expirée
+                                            </span>
+                                        {% endif %}
+                                        
+                                        {% if not promotion.active %}
+                                            <br><span class="badge badge-secondary">Désactivée</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    data-toggle="modal" 
+                                                    data-target="#editPromotionModal"
+                                                    data-promotion-id="{{ promotion.id }}"
+                                                    title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            
+                                            <form method="POST" action="/promotion/toggle/{{ promotion.id }}" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-outline-{{ 'warning' if promotion.active else 'success' }}"
+                                                        title="{{ 'Désactiver' if promotion.active else 'Activer' }}">
+                                                    <i class="fas fa-{{ 'pause' if promotion.active else 'play' }}"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <form method="POST" action="/promotion/delete/{{ promotion.id }}" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette promotion ?')">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune promotion trouvée</h5>
+                    <p class="text-muted">Créez votre première promotion pour attirer vos clients !</p>
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#addPromotionModal">
+                        <i class="fas fa-plus"></i> Créer une promotion
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Promotion -->
+<div class="modal fade" id="addPromotionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i> Nouvelle Promotion
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/promotion/add">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name">Nom de la promotion *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="discount_percent">Pourcentage de remise *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="discount_percent" 
+                                           name="discount_percent" min="0" max="100" step="0.1" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="start_date">Date de début *</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="end_date">Date de fin *</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="min_quantity">Quantité minimum</label>
+                                <input type="number" class="form-control" id="min_quantity" 
+                                       name="min_quantity" min="1" value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="categories">Catégories applicables</label>
+                                <select class="form-control" id="categories" name="categories" multiple>
+                                    {% for category in categories %}
+                                        <option value="{{ category }}">{{ category }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">
+                                    Laissez vide pour toutes les catégories. Maintenez Ctrl pour sélectionner plusieurs.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Créer la promotion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier Promotion -->
+<div class="modal fade" id="editPromotionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Modifier la Promotion
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" id="editPromotionForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_name">Nom de la promotion *</label>
+                                <input type="text" class="form-control" id="edit_name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_discount_percent">Pourcentage de remise *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="edit_discount_percent" 
+                                           name="discount_percent" min="0" max="100" step="0.1" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_description">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_start_date">Date de début *</label>
+                                <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_end_date">Date de fin *</label>
+                                <input type="date" class="form-control" id="edit_end_date" name="end_date" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_min_quantity">Quantité minimum</label>
+                                <input type="number" class="form-control" id="edit_min_quantity" 
+                                       name="min_quantity" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_categories">Catégories applicables</label>
+                                <select class="form-control" id="edit_categories" name="categories" multiple>
+                                    {% for category in categories %}
+                                        <option value="{{ category }}">{{ category }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit_active" name="active">
+                        <label class="form-check-label" for="edit_active">
+                            Promotion active
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Sauvegarder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Gestion du modal de modification
+    $('#editPromotionModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var promotionId = button.data('promotion-id');
+        
+        // Charger les données de la promotion
+        $.ajax({
+            url: `/api/promotion/${promotionId}`,
+            method: 'GET',
+            success: function(promotion) {
+                $('#edit_name').val(promotion.name);
+                $('#edit_description').val(promotion.description);
+                $('#edit_discount_percent').val(promotion.discount_percent);
+                $('#edit_start_date').val(promotion.start_date.split('T')[0]);
+                $('#edit_end_date').val(promotion.end_date.split('T')[0]);
+                $('#edit_min_quantity').val(promotion.min_quantity);
+                $('#edit_active').prop('checked', promotion.active);
+                
+                // Sélectionner les catégories
+                $('#edit_categories').val(promotion.applicable_categories);
+                
+                // Mettre à jour l'action du formulaire
+                $('#editPromotionForm').attr('action', `/promotion/edit/${promotionId}`);
+            },
+            error: function() {
+                alert('Erreur lors du chargement de la promotion');
+            }
+        });
+    });
+    
+    // Validation des dates
+    $('#start_date, #edit_start_date').on('change', function() {
+        var startDate = $(this).val();
+        var endDateField = $(this).attr('id').includes('edit') ? '#edit_end_date' : '#end_date';
+        $(endDateField).attr('min', startDate);
+    });
+    
+    $('#end_date, #edit_end_date').on('change', function() {
+        var endDate = $(this).val();
+        var startDateField = $(this).attr('id').includes('edit') ? '#edit_start_date' : '#start_date';
+        $(startDateField).attr('max', endDate);
+    });
+    
+    // Définir la date minimum à aujourd'hui
+    var today = new Date().toISOString().split('T')[0];
+    $('#start_date, #edit_start_date').attr('min', today);
+});
+</script>
+{% endblock %}

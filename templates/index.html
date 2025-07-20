@@ -178,16 +178,17 @@
                         <!-- Universal Search -->
                         <div class="form-group">
                             <label for="product-search">Rechercher un produit</label>
-                            <div class="input-group">
+                            <div class="input-group" style="position: relative;">
                                 <input type="text" class="form-control" id="product-search" 
-                                       placeholder="Nom du produit, catégorie ou code-barres...">
+                                       placeholder="Nom du produit, catégorie ou code-barres..."
+                                       autocomplete="off">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" id="barcode-scan">
                                         <i class="fas fa-barcode"></i>
                                     </button>
                                 </div>
+                                <div id="search-results" style="display: none;"></div>
                             </div>
-                            <div id="search-results"></div>
                         </div>
 
                         <!-- Customer Selection -->

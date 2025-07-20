@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Accès interdit - Quincaillerie Moderne{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-template">
+                <h1>Accès refusé</h1>
+                <h2>403 - Accès interdit</h2>
+                <div class="error-details">
+                    <i class="fas fa-lock fa-5x text-warning mb-4"></i>
+                    <p>Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

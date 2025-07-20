@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Page non trouvée - Quincaillerie Moderne{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>404 - Page non trouvée</h2>
+                <div class="error-details">
+                    <i class="fas fa-tools fa-5x text-muted mb-4"></i>
+                    <p>Désolé, la page que vous recherchez n'existe pas.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                    <a href="/inventory" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-boxes"></i> Inventaire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
